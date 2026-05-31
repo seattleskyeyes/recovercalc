@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vehicle Recovery Resistance Calculator</title>
+<style>
+  :root {
+    --deep-blue: #156082;
+    --light-blue: #C0E6F5;
+    --border: #d4dde2;
+    --text: #1c2b33;
+    --muted: #5c6e78;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: #f4f7f9;
+    line-height: 1.45;
+  }
+
+  header {
+    background: var(--deep-blue);
+    color: #fff;
+    padding: 18px 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 1.4rem;
+  }
+  header p {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    opacity: 0.9;
+  }
+
+  main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .mono {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .tab {
+    flex: 1 1 0;
+    background: #e6edf1;
+    color: var(--deep-blue);
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
+  .tab.active {
+    background: var(--deep-blue);
+    color: #fff;
+    border-color: var(--deep-blue);
+  }
+  .tab:hover { background: #d5e1e8; }
+  .tab.active:hover { background: #0f4a64; }
+
+  /* Sections */
+  section {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 22px;
+    overflow: hidden;
+  }
+  section > h2 {
+    margin: 0;
+    background: var(--deep-blue);
+    color: #fff;
+    font-size: 1rem;
+    padding: 12px 16px;
+  }
+  .section-body { padding: 16px; }
+
+  /* Add/Edit form */
+  .vehicle-form {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: end;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  input[type="text"], input[type="number"], select {
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background: #fff;
+    color: var(--text);
+  }
+  input[type="number"] { text-align: right; }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--deep-blue);
+    box-shadow: 0 0 0 2px rgba(21,96,130,0.15);
+  }
+
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: var(--deep-blue);
+    color: #fff;
+    transition: background 0.15s;
+  }
+  button:hover { background: #0f4a64; }
+  button.secondary {
+    background: #e6edf1;
+    color: var(--deep-blue);
+  }
+  button.secondary:hover { background: #d5e1e8; }
+  button.danger {
+    background: #b23b3b;
+  }
+  button.danger:hover { background: #8f2e2e; }
+
+  .empty {
+    color: var(--muted);
+    font-style: italic;
+    padding: 8px 0;
+  }
+
+  /* Vehicle cards */
+  .vehicle-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .vehicle-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #eef5f9;
+    border-bottom: 1px solid var(--border);
+  }
+  .vehicle-card-header .title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    flex: 1 1 auto;
+  }
+  .vehicle-card-header .meta {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .vehicle-card-header .actions {
+    display: flex;
+    gap: 8px;
+  }
+  .vehicle-card-header button {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0;
+  }
+  .result-block {
+    border-right: 1px solid var(--border);
+  }
+  .result-block:last-child { border-right: none; }
+  .result-block h3 {
+    margin: 0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 10px 14px;
+    background: var(--deep-blue);
+    color: #fff;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  table td {
+    padding: 8px 14px;
+  }
+  table td.value {
+    text-align: right;
+    white-space: nowrap;
+  }
+  table td.value.negative { color: #b23b3b; }
+  tbody tr:nth-child(odd) { background: var(--light-blue); }
+
+  /* Manual form */
+  .manual-form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Combined estimate — single column for mobile-first selection */
+  .combined-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    align-items: end;
+  }
+  .combined-controls .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .combined-output {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--light-blue);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    font-size: 0.9rem;
+  }
+  .combined-output .big {
+    grid-column: 1 / -1;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--deep-blue);
+    text-align: right;
+  }
+  .combined-output .lbl { color: var(--muted); }
+  .combined-output .val { text-align: right; }
+
+  @media (max-width: 640px) {
+    .vehicle-form { grid-template-columns: 1fr 1fr; }
+    .vehicle-form .field:first-child { grid-column: 1 / -1; }
+    .vehicle-form button { grid-column: 1 / -1; }
+    .combined-controls { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Vehicle Recovery Resistance Calculator</h1>
+  <p>Live estimates of recovery force (lbs) by ground condition &amp; slope.</p>
+</header>
+
+<main>
+  <div class="tabs">
+    <button type="button" class="tab active" data-view="saved" id="tabSaved">Saved Fleet</button>
+    <button type="button" class="tab" data-view="manual" id="tabManual">Manual Estimate</button>
+  </div>
+
+  <!-- ===================== SAVED FLEET VIEW ===================== -->
+  <div id="savedView">
+  <!-- Add / Edit vehicle -->
+  <section>
+    <h2 id="formTitle">Add Vehicle</h2>
+    <div class="section-body">
+      <form class="vehicle-form" id="vehicleForm" autocomplete="off">
+        <div class="field">
+          <label for="vName">Name</label>
+          <input type="text" id="vName" placeholder="e.g. Jeep Wrangler" required />
+        </div>
+        <div class="field">
+          <label for="vGvw">Gross Vehicle Weight (lbs)</label>
+          <input type="number" id="vGvw" min="0" step="any" placeholder="0" />
+        </div>
+        <div class="field">
+          <label for="vTrail">Trail Weight (lbs)</label>
+          <input type="number" id="vTrail" min="0" step="any" placeholder="0" />
+        </div>
+        <div class="field">
+          <button type="submit" id="saveBtn">Add Vehicle</button>
+          <button type="button" id="cancelEditBtn" class="secondary" style="display:none;margin-top:6px;">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Vehicles + results -->
+  <section>
+    <h2>Vehicles &amp; Resistance Results</h2>
+    <div class="section-body" id="vehiclesContainer">
+      <p class="empty">No vehicles yet. Add one above to see live calculations.</p>
+    </div>
+  </section>
+
+  <!-- Combined estimate -->
+  <section>
+    <h2>Combined Estimate</h2>
+    <div class="section-body">
+      <div class="combined-controls">
+        <div class="field">
+          <label for="cVehicle">Vehicle</label>
+          <select id="cVehicle"></select>
+        </div>
+        <div class="field">
+          <label for="cSurface">Surface Scenario</label>
+          <select id="cSurface"></select>
+        </div>
+        <div class="field">
+          <label for="cSlope">Slope</label>
+          <select id="cSlope"></select>
+        </div>
+        <div class="field checkbox-row">
+          <input type="checkbox" id="cBuffer" />
+          <label for="cBuffer" style="text-transform:none;letter-spacing:normal;font-weight:500;color:var(--text);">Apply 10% safety buffer</label>
+        </div>
+      </div>
+      <div class="combined-output" id="combinedOutput">
+        <div class="lbl">Add a vehicle to compute a combined estimate.</div>
+      </div>
+    </div>
+  </section>
+  </div><!-- /#savedView -->
+
+  <!-- ===================== MANUAL ESTIMATE VIEW ===================== -->
+  <div id="manualView" style="display:none;">
+    <!-- Manual weight input -->
+    <section>
+      <h2>Manual Entry</h2>
+      <div class="section-body">
+        <p class="empty" style="margin-top:0;">Enter a one-off weight to help someone else &mdash; nothing is saved. Use the actual loaded weight or the GVWR, whichever you have.</p>
+        <form class="manual-form" id="manualForm" autocomplete="off">
+          <div class="field">
+            <label for="mName">Label (optional)</label>
+            <input type="text" id="mName" placeholder="e.g. Friend's pickup" />
+          </div>
+          <div class="field">
+            <label for="mWeight">Weight or GVWR (lbs)</label>
+            <input type="number" id="mWeight" min="0" step="any" placeholder="0" />
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Manual results -->
+    <section>
+      <h2>Resistance Results</h2>
+      <div class="section-body" id="manualResults">
+        <p class="empty">Enter a weight above to see live calculations.</p>
+      </div>
+    </section>
+
+    <!-- Manual combined estimate -->
+    <section>
+      <h2>Combined Estimate</h2>
+      <div class="section-body">
+        <div class="combined-controls">
+          <div class="field">
+            <label for="mSurface">Surface Scenario</label>
+            <select id="mSurface"></select>
+          </div>
+          <div class="field">
+            <label for="mSlope">Slope</label>
+            <select id="mSlope"></select>
+          </div>
+          <div class="field checkbox-row">
+            <input type="checkbox" id="mBuffer" />
+            <label for="mBuffer" style="text-transform:none;letter-spacing:normal;font-weight:500;color:var(--text);">Apply 10% safety buffer</label>
+          </div>
+        </div>
+        <div class="combined-output" id="mCombinedOutput">
+          <div class="lbl">Enter a weight to compute a combined estimate.</div>
+        </div>
+      </div>
+    </section>
+  </div><!-- /#manualView -->
+</main>
+
+<script>
+  "use strict";
+
+  /* ---------- Calculation engine (single source of truth) ---------- */
+  const FACTORS = {
+    mired: {
+      "Tire Depth (75%)": 0.75,
+      "Wheel Depth (100%)": 1.00,
+      "Body Depth (150%)": 1.50
+    },
+    notMired: {
+      "Won't Roll (66%)": 0.66,
+      "Soft Gravel/Grass (15%)": 0.15,
+      "Hard Surface (10%)": 0.10
+    },
+    slope: {
+      "+45° (+75%)": 0.75,
+      "+30° (+50%)": 0.50,
+      "+15° (+25%)": 0.25,
+      "0° (0%)": 0,
+      "-15° (-25%)": -0.25,
+      "-30° (-50%)": -0.50,
+      "-45° (-75%)": -0.75
+    },
+    safetyBuffer: 0.10
+  };
+
+  // Driver value for all math
+  function driverWeight(v) {
+    return Math.max(Number(v.grossVehicleWeight) || 0, Number(v.trailWeight) || 0);
+  }
+  // Every resistance value
+  function resistance(W, factor) {
+    return W * factor;
+  }
+
+  function fmt(n) {
+    return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  /* ---------- State + persistence ---------- */
+  const STORAGE_KEY = "vrrc.vehicles.v1";
+  let vehicles = [];
+  let editingId = null;
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) vehicles = JSON.parse(raw);
+    } catch (e) {
+      vehicles = [];
+    }
+  }
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(vehicles));
+    } catch (e) { /* ignore quota errors */ }
+  }
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  /* ---------- DOM refs ---------- */
+  const form = document.getElementById("vehicleForm");
+  const elName = document.getElementById("vName");
+  const elGvw = document.getElementById("vGvw");
+  const elTrail = document.getElementById("vTrail");
+  const saveBtn = document.getElementById("saveBtn");
+  const cancelEditBtn = document.getElementById("cancelEditBtn");
+  const formTitle = document.getElementById("formTitle");
+  const container = document.getElementById("vehiclesContainer");
+
+  const cVehicle = document.getElementById("cVehicle");
+  const cSurface = document.getElementById("cSurface");
+  const cSlope = document.getElementById("cSlope");
+  const cBuffer = document.getElementById("cBuffer");
+  const combinedOutput = document.getElementById("combinedOutput");
+
+  // Tabs
+  const tabSaved = document.getElementById("tabSaved");
+  const tabManual = document.getElementById("tabManual");
+  const savedView = document.getElementById("savedView");
+  const manualView = document.getElementById("manualView");
+
+  // Manual mode
+  const mName = document.getElementById("mName");
+  const mWeight = document.getElementById("mWeight");
+  const manualResults = document.getElementById("manualResults");
+  const mSurface = document.getElementById("mSurface");
+  const mSlope = document.getElementById("mSlope");
+  const mBuffer = document.getElementById("mBuffer");
+  const mCombinedOutput = document.getElementById("mCombinedOutput");
+
+  /* ---------- Tab switching ---------- */
+  function setView(view) {
+    const saved = view === "saved";
+    savedView.style.display = saved ? "" : "none";
+    manualView.style.display = saved ? "none" : "";
+    tabSaved.classList.toggle("active", saved);
+    tabManual.classList.toggle("active", !saved);
+  }
+  tabSaved.addEventListener("click", function () { setView("saved"); });
+  tabManual.addEventListener("click", function () { setView("manual"); });
+
+  /* ---------- Form handling ---------- */
+  function resetForm() {
+    editingId = null;
+    form.reset();
+    formTitle.textContent = "Add Vehicle";
+    saveBtn.textContent = "Add Vehicle";
+    cancelEditBtn.style.display = "none";
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const name = elName.value.trim();
+    if (!name) { elName.focus(); return; }
+    const data = {
+      name: name,
+      grossVehicleWeight: Number(elGvw.value) || 0,
+      trailWeight: Number(elTrail.value) || 0
+    };
+    if (editingId) {
+      const v = vehicles.find(x => x.id === editingId);
+      if (v) Object.assign(v, data);
+    } else {
+      vehicles.push(Object.assign({ id: uid() }, data));
+    }
+    save();
+    resetForm();
+    renderAll();
+    elName.focus();
+  });
+
+  cancelEditBtn.addEventListener("click", resetForm);
+
+  function startEdit(id) {
+    const v = vehicles.find(x => x.id === id);
+    if (!v) return;
+    editingId = id;
+    elName.value = v.name;
+    elGvw.value = v.grossVehicleWeight || "";
+    elTrail.value = v.trailWeight || "";
+    formTitle.textContent = "Edit Vehicle";
+    saveBtn.textContent = "Save Changes";
+    cancelEditBtn.style.display = "block";
+    elName.focus();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function deleteVehicle(id) {
+    vehicles = vehicles.filter(x => x.id !== id);
+    if (editingId === id) resetForm();
+    save();
+    renderAll();
+  }
+
+  /* ---------- Rendering ---------- */
+  function resultTable(W, group) {
+    let rows = "";
+    for (const label in group) {
+      const val = resistance(W, group[label]);
+      const neg = val < 0 ? " negative" : "";
+      rows += '<tr><td>' + label + '</td><td class="value mono' + neg + '">' + fmt(val) + '</td></tr>';
+    }
+    return '<table><tbody>' + rows + '</tbody></table>';
+  }
+
+  function renderVehicles() {
+    if (vehicles.length === 0) {
+      container.innerHTML = '<p class="empty">No vehicles yet. Add one above to see live calculations.</p>';
+      return;
+    }
+    container.innerHTML = vehicles.map(function (v) {
+      const W = driverWeight(v);
+      return (
+        '<div class="vehicle-card">' +
+          '<div class="vehicle-card-header">' +
+            '<span class="title">' + escapeHtml(v.name) + '</span>' +
+            '<span class="meta mono">GVW ' + fmt(Number(v.grossVehicleWeight) || 0) +
+              ' &nbsp;|&nbsp; Trail ' + fmt(Number(v.trailWeight) || 0) +
+              ' &nbsp;|&nbsp; W = ' + fmt(W) + ' lbs</span>' +
+            '<span class="actions">' +
+              '<button type="button" class="secondary" data-edit="' + v.id + '">Edit</button>' +
+              '<button type="button" class="danger" data-delete="' + v.id + '">Delete</button>' +
+            '</span>' +
+          '</div>' +
+          '<div class="results-grid">' +
+            '<div class="result-block"><h3>If Mired</h3>' + resultTable(W, FACTORS.mired) + '</div>' +
+            '<div class="result-block"><h3>If NOT Mired</h3>' + resultTable(W, FACTORS.notMired) + '</div>' +
+            '<div class="result-block"><h3>Slope Resistance</h3>' + resultTable(W, FACTORS.slope) + '</div>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join("");
+
+    container.querySelectorAll("[data-edit]").forEach(function (btn) {
+      btn.addEventListener("click", function () { startEdit(btn.getAttribute("data-edit")); });
+    });
+    container.querySelectorAll("[data-delete]").forEach(function (btn) {
+      btn.addEventListener("click", function () { deleteVehicle(btn.getAttribute("data-delete")); });
+    });
+  }
+
+  function fillSelect(sel, options, makeLabel, makeValue) {
+    const prev = sel.value;
+    sel.innerHTML = options.map(function (o) {
+      return '<option value="' + makeValue(o) + '">' + escapeHtml(makeLabel(o)) + '</option>';
+    }).join("");
+    // restore previous selection if still present
+    if (prev && Array.prototype.some.call(sel.options, function (op) { return op.value === prev; })) {
+      sel.value = prev;
+    }
+  }
+
+  function surfaceOptions() {
+    // Combine mired + notMired into one surface list
+    const list = [];
+    for (const label in FACTORS.mired) list.push({ label: "Mired \u2014 " + label, factor: FACTORS.mired[label] });
+    for (const label in FACTORS.notMired) list.push({ label: "Not Mired \u2014 " + label, factor: FACTORS.notMired[label] });
+    return list;
+  }
+
+  function renderCombinedControls() {
+    fillSelect(cVehicle, vehicles, function (v) { return v.name; }, function (v) { return v.id; });
+    fillSelect(cSurface, surfaceOptions(), function (o) { return o.label; }, function (o) { return String(o.factor); });
+    const slopes = Object.keys(FACTORS.slope).map(function (k) { return { label: k, factor: FACTORS.slope[k] }; });
+    fillSelect(cSlope, slopes, function (o) { return o.label; }, function (o) { return String(o.factor); });
+  }
+
+  function renderCombinedOutput() {
+    if (vehicles.length === 0) {
+      combinedOutput.innerHTML = '<div class="lbl">Add a vehicle to compute a combined estimate.</div>';
+      return;
+    }
+    const v = vehicles.find(function (x) { return x.id === cVehicle.value; }) || vehicles[0];
+    const W = driverWeight(v);
+    const surfaceFactor = Number(cSurface.value) || 0;
+    const slopeFactor = Number(cSlope.value) || 0;
+    const surfaceValue = resistance(W, surfaceFactor);
+    const slopeValue = resistance(W, slopeFactor);
+    let estimate = surfaceValue + slopeValue;
+    const buffered = cBuffer.checked;
+    if (buffered) estimate = estimate * (1 + FACTORS.safetyBuffer);
+
+    combinedOutput.innerHTML =
+      '<div class="lbl">Vehicle (W)</div><div class="val mono">' + escapeHtml(v.name) + ' &middot; ' + fmt(W) + ' lbs</div>' +
+      '<div class="lbl">Surface resistance</div><div class="val mono">' + fmt(surfaceValue) + '</div>' +
+      '<div class="lbl">Slope resistance</div><div class="val mono">' + fmt(slopeValue) + '</div>' +
+      '<div class="lbl">Subtotal</div><div class="val mono">' + fmt(surfaceValue + slopeValue) + '</div>' +
+      '<div class="lbl">Safety buffer (10%)</div><div class="val mono">' + (buffered ? "applied" : "off") + '</div>' +
+      '<div class="big mono">' + fmt(estimate) + ' lbs</div>';
+  }
+
+  /* ---------- Manual mode rendering ---------- */
+  function renderManualResults() {
+    const W = Number(mWeight.value) || 0;
+    if (W <= 0) {
+      manualResults.innerHTML = '<p class="empty">Enter a weight above to see live calculations.</p>';
+      return;
+    }
+    const label = mName.value.trim();
+    manualResults.innerHTML =
+      '<div class="vehicle-card">' +
+        '<div class="vehicle-card-header">' +
+          '<span class="title">' + (label ? escapeHtml(label) : "Manual Estimate") + '</span>' +
+          '<span class="meta mono">W = ' + fmt(W) + ' lbs</span>' +
+        '</div>' +
+        '<div class="results-grid">' +
+          '<div class="result-block"><h3>If Mired</h3>' + resultTable(W, FACTORS.mired) + '</div>' +
+          '<div class="result-block"><h3>If NOT Mired</h3>' + resultTable(W, FACTORS.notMired) + '</div>' +
+          '<div class="result-block"><h3>Slope Resistance</h3>' + resultTable(W, FACTORS.slope) + '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderManualControls() {
+    fillSelect(mSurface, surfaceOptions(), function (o) { return o.label; }, function (o) { return String(o.factor); });
+    const slopes = Object.keys(FACTORS.slope).map(function (k) { return { label: k, factor: FACTORS.slope[k] }; });
+    fillSelect(mSlope, slopes, function (o) { return o.label; }, function (o) { return String(o.factor); });
+  }
+
+  function renderManualCombined() {
+    const W = Number(mWeight.value) || 0;
+    if (W <= 0) {
+      mCombinedOutput.innerHTML = '<div class="lbl">Enter a weight to compute a combined estimate.</div>';
+      return;
+    }
+    const surfaceFactor = Number(mSurface.value) || 0;
+    const slopeFactor = Number(mSlope.value) || 0;
+    const surfaceValue = resistance(W, surfaceFactor);
+    const slopeValue = resistance(W, slopeFactor);
+    let estimate = surfaceValue + slopeValue;
+    const buffered = mBuffer.checked;
+    if (buffered) estimate = estimate * (1 + FACTORS.safetyBuffer);
+
+    mCombinedOutput.innerHTML =
+      '<div class="lbl">Weight (W)</div><div class="val mono">' + fmt(W) + ' lbs</div>' +
+      '<div class="lbl">Surface resistance</div><div class="val mono">' + fmt(surfaceValue) + '</div>' +
+      '<div class="lbl">Slope resistance</div><div class="val mono">' + fmt(slopeValue) + '</div>' +
+      '<div class="lbl">Subtotal</div><div class="val mono">' + fmt(surfaceValue + slopeValue) + '</div>' +
+      '<div class="lbl">Safety buffer (10%)</div><div class="val mono">' + (buffered ? "applied" : "off") + '</div>' +
+      '<div class="big mono">' + fmt(estimate) + ' lbs</div>';
+  }
+
+  function renderManual() {
+    renderManualResults();
+    renderManualCombined();
+  }
+
+  function renderAll() {
+    renderVehicles();
+    renderCombinedControls();
+    renderCombinedOutput();
+  }
+
+  /* ---------- Live recompute on combined controls ---------- */
+  [cVehicle, cSurface, cSlope, cBuffer].forEach(function (el) {
+    el.addEventListener("change", renderCombinedOutput);
+    el.addEventListener("input", renderCombinedOutput);
+  });
+
+  /* ---------- Live recompute on manual controls ---------- */
+  [mName, mWeight].forEach(function (el) {
+    el.addEventListener("input", renderManual);
+  });
+  [mSurface, mSlope, mBuffer].forEach(function (el) {
+    el.addEventListener("change", renderManualCombined);
+    el.addEventListener("input", renderManualCombined);
+  });
+
+  /* ---------- Utils ---------- */
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  /* ---------- Init ---------- */
+  load();
+  renderAll();
+  renderManualControls();
+  renderManual();
+</script>
+</body>
+</html>
