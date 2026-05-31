@@ -86,7 +86,38 @@
     font-size: 1rem;
     padding: 12px 16px;
   }
+  section > h2.collapsible {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+  section > h2.collapsible .chev {
+    font-size: 0.7rem;
+    transition: transform 0.15s;
+    display: inline-block;
+  }
+  section > h2.collapsible.collapsed .chev {
+    transform: rotate(-90deg);
+  }
   .section-body { padding: 16px; }
+
+  /* Sort bar */
+  .sort-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .sort-bar label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .sort-bar select { max-width: 180px; }
 
   /* Add/Edit form */
   .vehicle-form {
@@ -167,6 +198,16 @@
     font-size: 1.05rem;
     flex: 1 1 auto;
   }
+  .vehicle-card-header .toggle {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    line-height: 1;
+    background: transparent;
+    color: var(--deep-blue);
+    border: 1px solid var(--border);
+    flex: 0 0 auto;
+  }
+  .vehicle-card-header .toggle:hover { background: #d5e1e8; }
   .vehicle-card-header .meta {
     font-size: 0.8rem;
     color: var(--muted);
@@ -264,7 +305,7 @@
 <body>
 <header>
   <h1>Vehicle Recovery Resistance Calculator</h1>
-  <p>Live estimates of recovery force (lbs) by ground condition &amp; slope.</p>
+  <p>Calculate the estimated recovery force required for a vehicle.</p>
 </header>
 
 <main>
@@ -277,7 +318,7 @@
   <div id="savedView">
   <!-- Add / Edit vehicle -->
   <section>
-    <h2 id="formTitle">Add Vehicle</h2>
+    <h2 id="formTitle" class="collapsible"><span class="chev">▼</span> Add Vehicle</h2>
     <div class="section-body">
       <form class="vehicle-form" id="vehicleForm" autocomplete="off">
         <div class="field">
@@ -302,15 +343,25 @@
 
   <!-- Vehicles + results -->
   <section>
-    <h2>Vehicles &amp; Resistance Results</h2>
-    <div class="section-body" id="vehiclesContainer">
-      <p class="empty">No vehicles yet. Add one above to see live calculations.</p>
+    <h2 class="collapsible"><span class="chev">▼</span> Saved Vehicle Resistance Details</h2>
+    <div class="section-body">
+      <div class="sort-bar" id="sortBar" style="display:none;">
+        <label for="sortMode">Sort by</label>
+        <select id="sortMode">
+          <option value="manual">Manual</option>
+          <option value="name">Name</option>
+          <option value="recency">Recency</option>
+        </select>
+      </div>
+      <div id="vehiclesContainer">
+        <p class="empty">No vehicles yet. Add one above to see live calculations.</p>
+      </div>
     </div>
   </section>
 
   <!-- Combined estimate -->
   <section>
-    <h2>Combined Estimate</h2>
+    <h2 class="collapsible"><span class="chev">▼</span> Combined Estimate</h2>
     <div class="section-body">
       <div class="combined-controls">
         <div class="field">
@@ -325,10 +376,6 @@
           <label for="cSlope">Slope</label>
           <select id="cSlope"></select>
         </div>
-        <div class="field checkbox-row">
-          <input type="checkbox" id="cBuffer" />
-          <label for="cBuffer" style="text-transform:none;letter-spacing:normal;font-weight:500;color:var(--text);">Apply 10% safety buffer</label>
-        </div>
       </div>
       <div class="combined-output" id="combinedOutput">
         <div class="lbl">Add a vehicle to compute a combined estimate.</div>
@@ -341,14 +388,10 @@
   <div id="manualView" style="display:none;">
     <!-- Manual weight input -->
     <section>
-      <h2>Manual Entry</h2>
+      <h2 class="collapsible"><span class="chev">▼</span> Manual Entry</h2>
       <div class="section-body">
-        <p class="empty" style="margin-top:0;">Enter a one-off weight to help someone else &mdash; nothing is saved. Use the actual loaded weight or the GVWR, whichever you have.</p>
+        <p class="empty" style="margin-top:0;">Enter a one-off weight to help someone else &mdash; nothing is saved. Use the actual loaded weight or the GVWR, whichever you know.</p>
         <form class="manual-form" id="manualForm" autocomplete="off">
-          <div class="field">
-            <label for="mName">Label (optional)</label>
-            <input type="text" id="mName" placeholder="e.g. Friend's pickup" />
-          </div>
           <div class="field">
             <label for="mWeight">Weight or GVWR (lbs)</label>
             <input type="number" id="mWeight" min="0" step="any" placeholder="0" />
@@ -359,7 +402,7 @@
 
     <!-- Manual results -->
     <section>
-      <h2>Resistance Results</h2>
+      <h2 class="collapsible"><span class="chev">▼</span> Resistance Results</h2>
       <div class="section-body" id="manualResults">
         <p class="empty">Enter a weight above to see live calculations.</p>
       </div>
@@ -367,7 +410,7 @@
 
     <!-- Manual combined estimate -->
     <section>
-      <h2>Combined Estimate</h2>
+      <h2 class="collapsible"><span class="chev">▼</span> Combined Estimate</h2>
       <div class="section-body">
         <div class="combined-controls">
           <div class="field">
@@ -377,10 +420,6 @@
           <div class="field">
             <label for="mSlope">Slope</label>
             <select id="mSlope"></select>
-          </div>
-          <div class="field checkbox-row">
-            <input type="checkbox" id="mBuffer" />
-            <label for="mBuffer" style="text-transform:none;letter-spacing:normal;font-weight:500;color:var(--text);">Apply 10% safety buffer</label>
           </div>
         </div>
         <div class="combined-output" id="mCombinedOutput">
@@ -433,8 +472,17 @@
 
   /* ---------- State + persistence ---------- */
   const STORAGE_KEY = "vrrc.vehicles.v1";
+  const SORT_KEY = "vrrc.sortMode.v1";
   let vehicles = [];
   let editingId = null;
+  let sortMode = "manual";
+  const collapsedIds = new Set();
+
+  function toggleCollapse(id) {
+    if (collapsedIds.has(id)) collapsedIds.delete(id);
+    else collapsedIds.add(id);
+    renderVehicles();
+  }
 
   function load() {
     try {
@@ -443,14 +491,47 @@
     } catch (e) {
       vehicles = [];
     }
+    try {
+      const sm = localStorage.getItem(SORT_KEY);
+      if (sm === "manual" || sm === "name" || sm === "recency") sortMode = sm;
+    } catch (e) { /* ignore */ }
   }
   function save() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(vehicles));
     } catch (e) { /* ignore quota errors */ }
   }
+  function saveSort() {
+    try { localStorage.setItem(SORT_KEY, sortMode); } catch (e) { /* ignore */ }
+  }
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  // Returns vehicles in display order based on sortMode. Manual = stored array order.
+  function sortedVehicles() {
+    if (sortMode === "name") {
+      return vehicles.slice().sort(function (a, b) {
+        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      });
+    }
+    if (sortMode === "recency") {
+      return vehicles.slice().sort(function (a, b) {
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
+    }
+    return vehicles.slice(); // manual order
+  }
+
+  function moveVehicle(id, dir) {
+    const i = vehicles.findIndex(function (x) { return x.id === id; });
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= vehicles.length) return;
+    const tmp = vehicles[i];
+    vehicles[i] = vehicles[j];
+    vehicles[j] = tmp;
+    save();
+    renderAll();
   }
 
   /* ---------- DOM refs ---------- */
@@ -462,11 +543,12 @@
   const cancelEditBtn = document.getElementById("cancelEditBtn");
   const formTitle = document.getElementById("formTitle");
   const container = document.getElementById("vehiclesContainer");
+  const sortBar = document.getElementById("sortBar");
+  const sortModeSel = document.getElementById("sortMode");
 
   const cVehicle = document.getElementById("cVehicle");
   const cSurface = document.getElementById("cSurface");
   const cSlope = document.getElementById("cSlope");
-  const cBuffer = document.getElementById("cBuffer");
   const combinedOutput = document.getElementById("combinedOutput");
 
   // Tabs
@@ -476,12 +558,10 @@
   const manualView = document.getElementById("manualView");
 
   // Manual mode
-  const mName = document.getElementById("mName");
   const mWeight = document.getElementById("mWeight");
   const manualResults = document.getElementById("manualResults");
   const mSurface = document.getElementById("mSurface");
   const mSlope = document.getElementById("mSlope");
-  const mBuffer = document.getElementById("mBuffer");
   const mCombinedOutput = document.getElementById("mCombinedOutput");
 
   /* ---------- Tab switching ---------- */
@@ -517,7 +597,7 @@
       const v = vehicles.find(x => x.id === editingId);
       if (v) Object.assign(v, data);
     } else {
-      vehicles.push(Object.assign({ id: uid() }, data));
+      vehicles.push(Object.assign({ id: uid(), createdAt: Date.now() }, data));
     }
     save();
     resetForm();
@@ -560,25 +640,35 @@
   }
 
   function renderVehicles() {
+    sortBar.style.display = vehicles.length > 1 ? "" : "none";
+    sortModeSel.value = sortMode;
     if (vehicles.length === 0) {
       container.innerHTML = '<p class="empty">No vehicles yet. Add one above to see live calculations.</p>';
       return;
     }
-    container.innerHTML = vehicles.map(function (v) {
+    const list = sortedVehicles();
+    const manual = sortMode === "manual";
+    container.innerHTML = list.map(function (v, idx) {
       const W = driverWeight(v);
+      const collapsed = collapsedIds.has(v.id);
+      const moveBtns = manual
+        ? '<button type="button" class="secondary" data-up="' + v.id + '"' + (idx === 0 ? ' disabled' : '') + ' title="Move up">\u25B2</button>' +
+          '<button type="button" class="secondary" data-down="' + v.id + '"' + (idx === list.length - 1 ? ' disabled' : '') + ' title="Move down">\u25BC</button>'
+        : '';
       return (
         '<div class="vehicle-card">' +
           '<div class="vehicle-card-header">' +
+            '<button type="button" class="toggle" data-toggle="' + v.id + '" aria-expanded="' + (!collapsed) + '">' + (collapsed ? "\u25B6" : "\u25BC") + '</button>' +
             '<span class="title">' + escapeHtml(v.name) + '</span>' +
             '<span class="meta mono">GVW ' + fmt(Number(v.grossVehicleWeight) || 0) +
-              ' &nbsp;|&nbsp; Trail ' + fmt(Number(v.trailWeight) || 0) +
-              ' &nbsp;|&nbsp; W = ' + fmt(W) + ' lbs</span>' +
+              ' &nbsp;|&nbsp; Trail ' + fmt(Number(v.trailWeight) || 0) + '</span>' +
             '<span class="actions">' +
+              moveBtns +
               '<button type="button" class="secondary" data-edit="' + v.id + '">Edit</button>' +
               '<button type="button" class="danger" data-delete="' + v.id + '">Delete</button>' +
             '</span>' +
           '</div>' +
-          '<div class="results-grid">' +
+          '<div class="results-grid"' + (collapsed ? ' style="display:none;"' : '') + '>' +
             '<div class="result-block"><h3>If Mired</h3>' + resultTable(W, FACTORS.mired) + '</div>' +
             '<div class="result-block"><h3>If NOT Mired</h3>' + resultTable(W, FACTORS.notMired) + '</div>' +
             '<div class="result-block"><h3>Slope Resistance</h3>' + resultTable(W, FACTORS.slope) + '</div>' +
@@ -587,6 +677,15 @@
       );
     }).join("");
 
+    container.querySelectorAll("[data-toggle]").forEach(function (btn) {
+      btn.addEventListener("click", function () { toggleCollapse(btn.getAttribute("data-toggle")); });
+    });
+    container.querySelectorAll("[data-up]").forEach(function (btn) {
+      btn.addEventListener("click", function () { moveVehicle(btn.getAttribute("data-up"), -1); });
+    });
+    container.querySelectorAll("[data-down]").forEach(function (btn) {
+      btn.addEventListener("click", function () { moveVehicle(btn.getAttribute("data-down"), 1); });
+    });
     container.querySelectorAll("[data-edit]").forEach(function (btn) {
       btn.addEventListener("click", function () { startEdit(btn.getAttribute("data-edit")); });
     });
@@ -614,16 +713,49 @@
     return list;
   }
 
+  // Surface select with a "Select One" placeholder that does not calculate
+  function fillSurfaceSelect(sel) {
+    const prev = sel.value;
+    let html = '<option value="">Select one\u2026</option>';
+    surfaceOptions().forEach(function (o) {
+      html += '<option value="' + o.factor + '">' + escapeHtml(o.label) + '</option>';
+    });
+    sel.innerHTML = html;
+    if (prev && Array.prototype.some.call(sel.options, function (op) { return op.value === prev; })) {
+      sel.value = prev;
+    } else {
+      sel.value = ""; // default to placeholder
+    }
+  }
+
+  // Slope select defaulting to 0
+  function fillSlopeSelect(sel) {
+    const prev = sel.value;
+    let html = "";
+    Object.keys(FACTORS.slope).forEach(function (k) {
+      html += '<option value="' + FACTORS.slope[k] + '">' + escapeHtml(k) + '</option>';
+    });
+    sel.innerHTML = html;
+    if (prev && Array.prototype.some.call(sel.options, function (op) { return op.value === prev; })) {
+      sel.value = prev;
+    } else {
+      sel.value = "0"; // default to 0 (the "0° (0%)" option)
+    }
+  }
+
   function renderCombinedControls() {
     fillSelect(cVehicle, vehicles, function (v) { return v.name; }, function (v) { return v.id; });
-    fillSelect(cSurface, surfaceOptions(), function (o) { return o.label; }, function (o) { return String(o.factor); });
-    const slopes = Object.keys(FACTORS.slope).map(function (k) { return { label: k, factor: FACTORS.slope[k] }; });
-    fillSelect(cSlope, slopes, function (o) { return o.label; }, function (o) { return String(o.factor); });
+    fillSurfaceSelect(cSurface);
+    fillSlopeSelect(cSlope);
   }
 
   function renderCombinedOutput() {
     if (vehicles.length === 0) {
       combinedOutput.innerHTML = '<div class="lbl">Add a vehicle to compute a combined estimate.</div>';
+      return;
+    }
+    if (cSurface.value === "") {
+      combinedOutput.innerHTML = '<div class="lbl">Select a surface scenario to compute an estimate.</div>';
       return;
     }
     const v = vehicles.find(function (x) { return x.id === cVehicle.value; }) || vehicles[0];
@@ -632,16 +764,15 @@
     const slopeFactor = Number(cSlope.value) || 0;
     const surfaceValue = resistance(W, surfaceFactor);
     const slopeValue = resistance(W, slopeFactor);
-    let estimate = surfaceValue + slopeValue;
-    const buffered = cBuffer.checked;
-    if (buffered) estimate = estimate * (1 + FACTORS.safetyBuffer);
+    const subtotal = surfaceValue + slopeValue;
+    const estimate = subtotal * (1 + FACTORS.safetyBuffer);
 
     combinedOutput.innerHTML =
       '<div class="lbl">Vehicle (W)</div><div class="val mono">' + escapeHtml(v.name) + ' &middot; ' + fmt(W) + ' lbs</div>' +
       '<div class="lbl">Surface resistance</div><div class="val mono">' + fmt(surfaceValue) + '</div>' +
       '<div class="lbl">Slope resistance</div><div class="val mono">' + fmt(slopeValue) + '</div>' +
-      '<div class="lbl">Subtotal</div><div class="val mono">' + fmt(surfaceValue + slopeValue) + '</div>' +
-      '<div class="lbl">Safety buffer (10%)</div><div class="val mono">' + (buffered ? "applied" : "off") + '</div>' +
+      '<div class="lbl">Subtotal</div><div class="val mono">' + fmt(subtotal) + '</div>' +
+      '<div class="lbl">Safety buffer (+10%)</div><div class="val mono">+' + fmt(subtotal * FACTORS.safetyBuffer) + '</div>' +
       '<div class="big mono">' + fmt(estimate) + ' lbs</div>';
   }
 
@@ -652,11 +783,10 @@
       manualResults.innerHTML = '<p class="empty">Enter a weight above to see live calculations.</p>';
       return;
     }
-    const label = mName.value.trim();
     manualResults.innerHTML =
       '<div class="vehicle-card">' +
         '<div class="vehicle-card-header">' +
-          '<span class="title">' + (label ? escapeHtml(label) : "Manual Estimate") + '</span>' +
+          '<span class="title">Manual Estimate</span>' +
           '<span class="meta mono">W = ' + fmt(W) + ' lbs</span>' +
         '</div>' +
         '<div class="results-grid">' +
@@ -668,9 +798,8 @@
   }
 
   function renderManualControls() {
-    fillSelect(mSurface, surfaceOptions(), function (o) { return o.label; }, function (o) { return String(o.factor); });
-    const slopes = Object.keys(FACTORS.slope).map(function (k) { return { label: k, factor: FACTORS.slope[k] }; });
-    fillSelect(mSlope, slopes, function (o) { return o.label; }, function (o) { return String(o.factor); });
+    fillSurfaceSelect(mSurface);
+    fillSlopeSelect(mSlope);
   }
 
   function renderManualCombined() {
@@ -679,20 +808,23 @@
       mCombinedOutput.innerHTML = '<div class="lbl">Enter a weight to compute a combined estimate.</div>';
       return;
     }
+    if (mSurface.value === "") {
+      mCombinedOutput.innerHTML = '<div class="lbl">Select a surface scenario to compute an estimate.</div>';
+      return;
+    }
     const surfaceFactor = Number(mSurface.value) || 0;
     const slopeFactor = Number(mSlope.value) || 0;
     const surfaceValue = resistance(W, surfaceFactor);
     const slopeValue = resistance(W, slopeFactor);
-    let estimate = surfaceValue + slopeValue;
-    const buffered = mBuffer.checked;
-    if (buffered) estimate = estimate * (1 + FACTORS.safetyBuffer);
+    const subtotal = surfaceValue + slopeValue;
+    const estimate = subtotal * (1 + FACTORS.safetyBuffer);
 
     mCombinedOutput.innerHTML =
       '<div class="lbl">Weight (W)</div><div class="val mono">' + fmt(W) + ' lbs</div>' +
       '<div class="lbl">Surface resistance</div><div class="val mono">' + fmt(surfaceValue) + '</div>' +
       '<div class="lbl">Slope resistance</div><div class="val mono">' + fmt(slopeValue) + '</div>' +
-      '<div class="lbl">Subtotal</div><div class="val mono">' + fmt(surfaceValue + slopeValue) + '</div>' +
-      '<div class="lbl">Safety buffer (10%)</div><div class="val mono">' + (buffered ? "applied" : "off") + '</div>' +
+      '<div class="lbl">Subtotal</div><div class="val mono">' + fmt(subtotal) + '</div>' +
+      '<div class="lbl">Safety buffer (+10%)</div><div class="val mono">+' + fmt(subtotal * FACTORS.safetyBuffer) + '</div>' +
       '<div class="big mono">' + fmt(estimate) + ' lbs</div>';
   }
 
@@ -708,18 +840,33 @@
   }
 
   /* ---------- Live recompute on combined controls ---------- */
-  [cVehicle, cSurface, cSlope, cBuffer].forEach(function (el) {
+  [cVehicle, cSurface, cSlope].forEach(function (el) {
     el.addEventListener("change", renderCombinedOutput);
     el.addEventListener("input", renderCombinedOutput);
   });
 
   /* ---------- Live recompute on manual controls ---------- */
-  [mName, mWeight].forEach(function (el) {
-    el.addEventListener("input", renderManual);
-  });
-  [mSurface, mSlope, mBuffer].forEach(function (el) {
+  mWeight.addEventListener("input", renderManual);
+  [mSurface, mSlope].forEach(function (el) {
     el.addEventListener("change", renderManualCombined);
     el.addEventListener("input", renderManualCombined);
+  });
+
+  /* ---------- Sort control ---------- */
+  sortModeSel.addEventListener("change", function () {
+    sortMode = sortModeSel.value;
+    saveSort();
+    renderVehicles();
+  });
+
+  /* ---------- Collapsible major sections ---------- */
+  document.querySelectorAll("section > h2.collapsible").forEach(function (h2) {
+    h2.addEventListener("click", function () {
+      const body = h2.nextElementSibling;
+      if (!body) return;
+      const collapsed = h2.classList.toggle("collapsed");
+      body.style.display = collapsed ? "none" : "";
+    });
   });
 
   /* ---------- Utils ---------- */
